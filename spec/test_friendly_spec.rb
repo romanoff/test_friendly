@@ -39,5 +39,16 @@ describe "TestFriendly" do
     user = User1.new
     user.should be_valid
   end
+
+  it "should be able to turn validations on" do
+    Rails.stub(:env => 'test')
+    require 'models/user2'
+    User2.force_validations
+    user = User2.new
+    user.should_not be_valid
+    user.first_name = 'First name'
+    user.last_name = 'Last name'
+    user.should be_valid
+  end
   
 end

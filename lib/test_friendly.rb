@@ -1,6 +1,7 @@
 module TestFriendly
   def acts_as_test_friendly
     @test_friendly = true
+    @model_callbacks = []
   end
 
   def test_friendly?
@@ -11,6 +12,9 @@ module TestFriendly
     @validations_block = block
     if callbacks_on?
       @validations_block.call
+      @model_callbacks << self._validate_callbacks
+      @model_callbacks.flatten!
+      @model_callbacks.uniq!
       @validations_block = nil
     end
   end
@@ -22,8 +26,21 @@ module TestFriendly
   def force_validations
     if @validations_block
       @validations_block.call
+      @model_callbacks << self._validate_callbacks
+      @model_callbacks.flatten!
+      @model_callbacks.uniq!
       @validations_block = nil
+    elsif @model_callbacks.length > 0 && self._validate_callbacks.length == 0
+      @model_callbacks.each do |callback|
+        self._validate_callbacks << callback
+      end
+      self.__define_runner(:validate)      
     end
+  end
+
+  def drop_validations
+    self._validate_callbacks.reject!{true}
+    self.__define_runner(:validate)
   end
 
 end

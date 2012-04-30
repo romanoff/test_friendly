@@ -6,6 +6,15 @@ module TestFriendly
   def test_friendly?
     !!@test_friendly
   end
+
+  def test_friendly_validations(*block_names, &block)
+    block.call if callbacks_on?
+  end
+
+  def callbacks_on?
+    Rails.env != 'test'
+  end
+
 end
 
 if defined?(ActiveRecord::Base)

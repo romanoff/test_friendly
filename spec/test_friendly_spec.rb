@@ -1,5 +1,11 @@
+require 'active_model'
+require 'active_support'
+
 class ActiveRecord
   class Base;
+    include ::ActiveModel::Validations
+    include ::ActiveSupport::Callbacks
+    define_callbacks :save
   end
 end
 
@@ -12,6 +18,8 @@ end
 class Person < ActiveRecord::Base
 end
 
+class Rails;end
+
 describe "TestFriendly" do
   
   it "should be able to enable acts_as_test_friendly ability" do
@@ -23,6 +31,13 @@ describe "TestFriendly" do
   it "should be included in ActiveRecord::Base if it's present" do
     Person.acts_as_test_friendly
     Person.should be_test_friendly
+  end
+
+  it "should be not adding validations if Rails.env is test" do
+    Rails.stub(:env => 'test')
+    require 'models/user1'
+    user = User1.new
+    user.should be_valid
   end
   
 end

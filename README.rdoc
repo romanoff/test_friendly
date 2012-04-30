@@ -1,4 +1,4 @@
-= test_friendly
+= Test friendly
 
 Test friendly gem provides functionality to turn off validations in test environment.
 

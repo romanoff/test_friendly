@@ -106,5 +106,15 @@ describe "TestFriendly" do
     User7.force_validations
     User7._validate_callbacks.length == 1
   end
+
+  it "should be able to add different validations using same tag" do
+    Rails.stub(:env => 'development')
+    require 'models/user8'
+    User8._validate_callbacks.length == 2
+    User8.drop_validations(:additional)
+    User8._validate_callbacks.length == 0
+    User8.force_validations(:additional)
+    User8._validate_callbacks.length == 2
+  end
   
 end

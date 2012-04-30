@@ -1,6 +1,42 @@
 = test_friendly
 
-Description goes here.
+Test friendly gem provides functionality to turn off validations in test environment.
+
+In order to turn off validations in test environment, class inherited from ActiveRecord::Base should have <tt>acts_as_test_friendly</tt> static method and  <tt>test_friendly_validations</tt> block where validations should be inserted. Here is an example:
+
+  class User < ActiveRecord::Base
+    acts_as_test_friendly
+  
+    attr_accessor :first_name, :last_name
+
+    test_friendly_validations do
+      validates_presence_of :first_name, :last_name
+    end
+  
+  end
+
+In order to turn validations on, <tt>User.force_validations</tt> method has to be used (usually in before validation hook). Also user can optionally turn on only specific validations:
+
+  class User < ActiveRecord::Base
+    acts_as_test_friendly
+  
+    attr_accessor :first_name, :last_name, :new_attribute
+  
+    test_friendly_validations do
+      validates_presence_of :first_name, :last_name
+    end
+
+    test_friendly_validations(:additional) do
+      validates_presence_of :new_attribute
+    end
+  
+  end
+
+Here in order to turn on only additional validations, <tt>User.force_validations(:additional)</tt> construction has to be used. If tag is not specified - validation goes under :defaults tag. So, in order to turn on first and last name validation in example above, <tt>User.force_validations(:defaults)</tt> has to be used. For forcing all validations for all tags, <tt>User.force_validations(:all)</tt> should be used.
+
+There is also drop validations functionality. It has same signature as force_validations, but different method is used. <tt>User.drop_validations</tt>
+
+At the moment gem works with Rspec only, but this can be changed in future.
 
 == Contributing to test_friendly
  

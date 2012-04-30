@@ -63,5 +63,48 @@ describe "TestFriendly" do
     User3.force_validations
     user.should_not be_valid
   end
+
+  it "should be able to turn on validations using tag" do
+    require 'models/user4'
+    User4.force_validations(:additional)
+    user = User4.new
+    user.new_attribute = 'some value'
+    user.should be_valid
+    User4.force_validations
+    user.should_not be_valid
+  end
+
+  it "should be able to drop validations using tag" do
+    Rails.stub(:env => 'development')
+    require 'models/user5'
+    user = User5.new
+    user.first_name = 'Vasja'
+    user.last_name = 'Pupkin'
+    user.should_not be_valid
+    User5.drop_validations(:additional)
+    user.should be_valid
+  end
+
+  it "should be able to drop and recover all validations" do
+    Rails.stub(:env => 'development')
+    require 'models/user6'
+    User6.drop_validations(:all)
+    user = User6.new
+    user.should be_valid
+    User6.force_validations(:all)
+    user.first_name = 'first_name'
+    user.last_name = 'last_name'
+    user.should_not be_valid
+    user.new_attribute = 'some attribute'
+    user.should be_valid
+  end
+  
+  it "should not add number of callbacks if validations were forced 2 times" do
+    Rails.stub(:env => 'development')
+    require 'models/user7'
+    User7.force_validations
+    User7.force_validations
+    User7._validate_callbacks.length == 1
+  end
   
 end

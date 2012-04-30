@@ -1,9 +1,32 @@
 module TestFriendly
+  class Global
+    def self.add_model(model)
+      @models ||= []
+      @models << model
+      @models.uniq!
+    end
+
+    def self.force_validations(tag = :defaults)
+      @models ||= []      
+      @models.each do |model|
+        model.force_validations(tag)
+      end
+    end
+    
+    def self.drop_validations(tag = :defaults)
+      @models ||= []
+      @models.each do |model|
+        model.drop_validations(tag)
+      end
+    end
+  end
+
   def acts_as_test_friendly
     @test_friendly = true
     @model_callbacks = []
     @tagged_callbacks = {}
     @unprocessed_procs = {}
+    Global.add_model(self)
   end
 
   def test_friendly?
@@ -25,7 +48,8 @@ module TestFriendly
   def force_validations(tag = :defaults)
     callbacks_added = execute_callback_blocks(tag)
     @tagged_callbacks[tag] ||= []
-    if tag == :all || !callbacks_added && !@tagged_callbacks[tag].empty?
+    if self.respond_to?(:_validate_callbacks) && 
+        (tag == :all || !callbacks_added && !@tagged_callbacks[tag].empty?)
       used_callbacks_hashes = self._validate_callbacks.map(&:hash)
       @model_callbacks.each do |callback|
         if !used_callbacks_hashes.include?(callback.hash) && 
@@ -39,10 +63,12 @@ module TestFriendly
 
   def drop_validations(tag = :defaults)
     @tagged_callbacks[tag] ||= [] if tag != :all
-    self._validate_callbacks.reject!{ |callback|
-      tag == :all || @tagged_callbacks[tag].include?(callback.hash)
-    }
-    self.__define_runner(:validate)
+    if self.respond_to?(:_validate_callbacks)
+      self._validate_callbacks.reject!{ |callback|
+        tag == :all || @tagged_callbacks[tag].include?(callback.hash)
+      }
+      self.__define_runner(:validate)
+    end
   end
 
   private

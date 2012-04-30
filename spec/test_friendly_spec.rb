@@ -116,5 +116,21 @@ describe "TestFriendly" do
     User8.force_validations(:additional)
     User8._validate_callbacks.length == 2
   end
+
+  it "should be able to force and drop all validations for all models" do
+    Rails.stub(:env => 'development')
+    require 'models/user9'
+    require 'models/user10'
+    user1 = User9.new
+    user2 = User10.new
+    user1.should_not be_valid
+    user2.should_not be_valid
+    TestFriendly::Global.drop_validations(:all)
+    user1.should be_valid
+    user2.should be_valid
+    TestFriendly::Global.force_validations(:all)
+    user1.should_not be_valid
+    user2.should_not be_valid
+  end
   
 end

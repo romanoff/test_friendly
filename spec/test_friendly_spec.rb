@@ -9,6 +9,12 @@ class ActiveRecord
   end
 end
 
+class Rails
+  def self.env
+    'test'
+  end
+end
+
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 class User
@@ -16,12 +22,6 @@ class User
 end
 
 class Person < ActiveRecord::Base
-end
-
-class Rails
-  def self.env
-    'test'
-  end
 end
 
 describe "TestFriendly" do

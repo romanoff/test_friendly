@@ -19,6 +19,10 @@ module TestFriendly
         model.drop_validations(tag)
       end
     end
+
+    def self.callbacks_on?
+      Rails.env != 'test'
+    end
   end
 
   def acts_as_test_friendly
@@ -36,13 +40,9 @@ module TestFriendly
   def test_friendly_validations(tag = :defaults, &block)
     @unprocessed_procs[tag] ||= []
     @unprocessed_procs[tag] << block
-    if callbacks_on?
+    if Global.callbacks_on?
       execute_callback_blocks(tag)
     end
-  end
-
-  def callbacks_on?
-    Rails.env != 'test'
   end
 
   def force_validations(tag = :defaults)
@@ -96,4 +96,12 @@ end
 
 if defined?(ActiveRecord::Base)
   ActiveRecord::Base.extend TestFriendly
+end
+
+if defined?(RSpec) && !TestFriendly::Global.callbacks_on?
+  RSpec.configure do |config|
+    config.before(:each) do
+      TestFriendly::Global.drop_validations(:all)
+    end
+  end
 end

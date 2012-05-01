@@ -1,35 +1,20 @@
+require 'global'
+require 'test_friendly_helper'
+
 module TestFriendly
-  class Global
-    def self.add_model(model)
-      @models ||= []
-      @models << model
-      @models.uniq!
-    end
 
-    def self.force_validations(tag = :defaults)
-      @models ||= []      
-      @models.each do |model|
-        model.force_validations(tag)
-      end
-    end
-    
-    def self.drop_validations(tag = :defaults)
-      @models ||= []
-      @models.each do |model|
-        model.drop_validations(tag)
-      end
-    end
+  VALIDATION = 1
+  CALLBACK = 2
 
-    def self.callbacks_on?
-      Rails.env != 'test'
-    end
+  def __define_runner(symbol)
+    @runner_symbols << symbol unless @runner_symbols.include?(symbol)
+    super(symbol)
   end
 
   def acts_as_test_friendly
     @test_friendly = true
     @model_callbacks = []
-    @tagged_callbacks = {}
-    @unprocessed_procs = {}
+    @runner_symbols = []
     Global.add_model(self)
   end
 
@@ -38,22 +23,22 @@ module TestFriendly
   end
 
   def test_friendly_validations(tag = :defaults, &block)
-    @unprocessed_procs[tag] ||= []
-    @unprocessed_procs[tag] << block
+    helper = TestFriendlyHelper.get_helper_for(tag, VALIDATION)
+    helper.unprocessed_procs << block
     if Global.callbacks_on?
-      execute_callback_blocks(tag)
+      execute_callback_blocks(tag, VALIDATION)
     end
   end
 
   def force_validations(tag = :defaults)
-    callbacks_added = execute_callback_blocks(tag)
-    @tagged_callbacks[tag] ||= []
+    callbacks_added = execute_callback_blocks(tag, VALIDATION)
+    helper = TestFriendlyHelper.get_helper_for(tag, VALIDATION)
     if self.respond_to?(:_validate_callbacks) && 
-        (tag == :all || !callbacks_added && !@tagged_callbacks[tag].empty?)
+        (tag == :all || !callbacks_added && !helper.tagged_callbacks.empty?)
       used_callbacks_hashes = self._validate_callbacks.map(&:hash)
       @model_callbacks.each do |callback|
         if !used_callbacks_hashes.include?(callback.hash) && 
-            (tag == :all || @tagged_callbacks[tag].include?(callback.hash))
+            (tag == :all || helper.tagged_callbacks.include?(callback.hash))
           self._validate_callbacks << callback
         end
       end
@@ -62,10 +47,10 @@ module TestFriendly
   end
 
   def drop_validations(tag = :defaults)
-    @tagged_callbacks[tag] ||= [] if tag != :all
+    helper = TestFriendlyHelper.get_helper_for(tag, VALIDATION)    
     if self.respond_to?(:_validate_callbacks)
       self._validate_callbacks.reject!{ |callback|
-        tag == :all || @tagged_callbacks[tag].include?(callback.hash)
+        tag == :all || helper.tagged_callbacks.include?(callback.hash)
       }
       self.__define_runner(:validate)
     end
@@ -73,23 +58,37 @@ module TestFriendly
 
   private
 
-  def execute_callback_blocks(tag)
-    @unprocessed_procs[tag] ||= []
-    return false if @unprocessed_procs[tag].empty?
-    before = self._validate_callbacks.map(&:hash)
-    @unprocessed_procs[tag].each do |proc|
+  def execute_callback_blocks(tag, type)
+    helper = TestFriendlyHelper.get_helper_for(tag, type)
+    return false if helper.unprocessed_procs.empty?
+    before = callbacks_hashes
+    helper.unprocessed_procs.each do |proc|
       proc.call
     end
-    after = self._validate_callbacks.map(&:hash)
+    after = callbacks_hashes
     diff = after - before
-    @tagged_callbacks[tag] ||= []
-    @tagged_callbacks[tag] << diff
-    @tagged_callbacks[tag].flatten!
-    @tagged_callbacks[tag].uniq!
-    @model_callbacks << self._validate_callbacks
-    @model_callbacks.flatten!
-    @model_callbacks.uniq!
-    @unprocessed_procs[tag] = []
+    helper.tagged_callbacks << diff
+    helper.optimize_tagged_callbacks
+    add_model_callbacks
+    helper.unprocessed_procs = []
+  end
+
+  def callbacks_hashes
+    hashes = []
+    @runner_symbols.each do |runner_symbol|
+      hashes << self.send("_#{runner_symbol}_callbacks").map(&:hash)
+    end
+    hashes.flatten
+  end
+
+  def add_model_callbacks
+    callbacks_hashes = @model_callbacks.map(&:hash)
+    @runner_symbols.each do |runner_symbol|
+      callbacks = self.send("_#{runner_symbol}_callbacks")
+      callbacks.each do |callback|
+        @model_callbacks << callback unless callbacks_hashes.include?(callback.hash)
+      end
+    end
   end
 
 end

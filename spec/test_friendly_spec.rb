@@ -132,5 +132,20 @@ describe "TestFriendly" do
     user1.should_not be_valid
     user2.should_not be_valid
   end
+
+  it "should be able to force/drop callbacks" do
+    require 'models/user11'
+    user = User11.new
+    user.save
+    user.executed_actions.should =~ ['save']
+    User11.force_callbacks
+    user.executed_actions = []
+    user.save
+    user.executed_actions.should =~ ['save', 'before_save', 'after_save']
+    TestFriendly::Global.drop_callbacks(:all)
+    user.executed_actions = []
+    user.save
+    user.executed_actions.should =~ ['save']
+  end
   
 end

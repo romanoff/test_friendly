@@ -21,6 +21,13 @@ module TestFriendly
       end
     end
 
+    def self.drop_callbacks(tag = :defaults)
+      @models ||= []
+      @models.each do |model|
+        model.drop_callbacks(tag)
+      end      
+    end
+
     def self.callbacks_on?
       Rails.env != 'test'
     end

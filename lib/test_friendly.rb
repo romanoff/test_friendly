@@ -32,6 +32,14 @@ module TestFriendly
     end
   end
 
+  def test_friendly_callbacks(tag = :defaults, &block)
+    helper = TestFriendlyHelper.get_helper_for(tag, CALLBACK)
+    helper.unprocessed_procs << block
+    if Global.callbacks_on?
+      execute_callback_blocks(tag, CALLBACK)
+    end
+  end
+
   def force_callbacks(tag = :defaults, type = CALLBACK)
     callbacks_added = execute_callback_blocks(tag, type)
     helper = TestFriendlyHelper.get_helper_for(tag, type)
@@ -95,6 +103,7 @@ module TestFriendly
     helper.optimize_tagged_callbacks
     add_model_callbacks(type)
     helper.unprocessed_procs = []
+    !diff.empty?
   end
 
   def callbacks_hashes
@@ -127,6 +136,7 @@ if defined?(RSpec) && !TestFriendly::Global.callbacks_on?
   RSpec.configure do |config|
     config.before(:each) do
       TestFriendly::Global.drop_validations(:all)
+      TestFriendly::Global.drop_callbacks(:all)
     end
   end
 end

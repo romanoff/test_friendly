@@ -36,7 +36,34 @@ Here in order to turn on only additional validations, <tt>User.force_validations
 
 There is also drop validations functionality. It has same signature as force_validations, but different method is used. <tt>User.drop_validations</tt>
 
-At the moment gem works with Rspec only, but this can be changed in future.
+Test friendly gem is also supplied with functionality that lets turn on/off callbacks in test environment. Here is an example of class:
+
+  class User < ActiveRecord::Base
+    include AllMissingUserMethods
+
+    acts_as_test_friendly
+  
+    attr_accessor :first_name, :last_name, :new_attribute
+  
+    test_friendly_callbacks do
+      after_save :send_notification_email
+    end
+
+    test_friendly_callbacks(:additional) do
+      before_save :create_order_instance
+    end
+  
+  end
+
+Callbacks work same way as validations, but have different methods signature (valdiations are substituted with callbacks). <tt>User.force_callbacks</tt>, <tt>User.force_callbacks(:additional)</tt>, <tt>User.force_callbacks(:all)</tt>, <tt>User.drop_callbacks</tt>, <tt>User.drop_callbacks(:additional)</tt>, <tt>User.drop_callbacks(:all)</tt> all can be used.
+
+At the moment gem automatically turns off validations and callbacks in every Rspec test. If you are using different testing tool, there are some methods that can help you:
+  1. TestFriendly::Global.drop_validations(:all) - drops all validations
+  2. TestFriendly::Global.force_validations(:all) - forces all validations
+  3. TestFriendly::Global.drop_callbacks(:all) - drops all callbacks
+  4. TestFriendly::Global.force_callbacks(:all) - forces all callbacks
+
+Also you can use specific tag as parameter as well as leave parameter blank (in this case :defaults tag will be used).
 
 == Contributing to test_friendly
  

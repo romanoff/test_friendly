@@ -13,6 +13,13 @@ module TestFriendly
         model.force_validations(tag)
       end
     end
+
+    def self.force_callbacks(tag = :defaults)
+      @models ||= []      
+      @models.each do |model|
+        model.force_callbacks(tag)
+      end
+    end
     
     def self.drop_validations(tag = :defaults)
       @models ||= []

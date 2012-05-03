@@ -1,5 +1,5 @@
-require 'global'
-require 'test_friendly_helper'
+require File.join(File.dirname(__FILE__), 'global')
+require File.join(File.dirname(__FILE__), 'test_friendly_helper')
 
 module TestFriendly
 
@@ -25,6 +25,7 @@ module TestFriendly
   end
 
   def test_friendly_validations(tag = :defaults, &block)
+    acts_as_test_friendly if !test_friendly?
     helper = TestFriendlyHelper.get_helper_for(tag, VALIDATION)
     helper.unprocessed_procs << block
     if Global.callbacks_on?
@@ -33,6 +34,7 @@ module TestFriendly
   end
 
   def test_friendly_callbacks(tag = :defaults, &block)
+    acts_as_test_friendly if !test_friendly?
     helper = TestFriendlyHelper.get_helper_for(tag, CALLBACK)
     helper.unprocessed_procs << block
     if Global.callbacks_on?
@@ -41,6 +43,7 @@ module TestFriendly
   end
 
   def force_callbacks(tag = :defaults, type = CALLBACK)
+    acts_as_test_friendly if !test_friendly?
     callbacks_added = execute_callback_blocks(tag, type)
     helper = TestFriendlyHelper.get_helper_for(tag, type)
     if tag == :all || (!callbacks_added && !helper.tagged_callbacks.empty?)
@@ -62,6 +65,7 @@ module TestFriendly
   end
 
   def drop_callbacks(tag = :defaults, type = CALLBACK)
+    acts_as_test_friendly if !test_friendly?
     helper = TestFriendlyHelper.get_helper_for(tag, type)    
     used_runners = []
     @runner_symbols.each do |runner_symbol|

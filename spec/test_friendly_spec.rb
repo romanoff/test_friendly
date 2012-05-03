@@ -147,5 +147,13 @@ describe "TestFriendly" do
     user.save
     user.executed_actions.should =~ ['save']
   end
+
+  it "should not require acts_as_test_friendly to force validatons" do
+    require 'models/user12'
+    user = User12.new
+    user.should be_valid
+    User12.force_validations
+    user.should_not be_valid
+  end
   
 end

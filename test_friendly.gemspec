@@ -5,12 +5,12 @@
 
 Gem::Specification.new do |s|
   s.name = "test_friendly"
-  s.version = "0.2.0"
+  s.version = "0.2.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andriy Romanov"]
-  s.date = "2012-05-01"
-  s.description = "Gem for turning off validatons in test environment"
+  s.date = "2012-05-03"
+  s.description = "Gem for turning off validations and callbacks in test environment"
   s.email = "aromanov@partnerpedia.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
@@ -25,9 +25,12 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "lib/global.rb",
     "lib/test_friendly.rb",
+    "lib/test_friendly_helper.rb",
     "spec/models/user1.rb",
     "spec/models/user10.rb",
+    "spec/models/user11.rb",
     "spec/models/user2.rb",
     "spec/models/user3.rb",
     "spec/models/user4.rb",
@@ -37,13 +40,14 @@ Gem::Specification.new do |s|
     "spec/models/user8.rb",
     "spec/models/user9.rb",
     "spec/spec_helper.rb",
-    "spec/test_friendly_spec.rb"
+    "spec/test_friendly_spec.rb",
+    "test_friendly.gemspec"
   ]
   s.homepage = "http://github.com/romanoff/test_friendly"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "1.8.23"
-  s.summary = "Gem for turning off validatons in test environment"
+  s.summary = "Gem for turning off validations and callbacks in test environment"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
